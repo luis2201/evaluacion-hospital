@@ -1,0 +1,152 @@
+Etapa 1. Base de datos y arquitectura del dominio
+Objetivo: convertir el SQL revisado en una estructura Laravel mantenible.
+Incluye:
+Revisar definitivamente entidades, relaciones y estados.
+Convertir el esquema SQL v2 en migraciones Laravel.
+Crear enums PHP para estados y calificaciones.
+Crear modelos Eloquent y relaciones.
+Preparar seeders del instrumento:5 dominios.
+17 criterios.
+44 descriptores.
+Categorías de resultado.
+
+Definir reglas para versionar el instrumento.
+Pruebas de migraciones, relaciones y seeders.
+Resultado: base de datos reproducible mediante php artisan migrate --seed.
+
+Etapa 2. Autenticación, usuarios y seguridad
+Objetivo: controlar el acceso institucional.
+Incluye:
+Inicio y cierre de sesión.
+Recuperación segura de contraseña.
+Gestión de sesiones.
+Activación y desactivación de usuarios.
+Roles iniciales:Administrador.
+Responsable de dominio.
+Evaluador externo.
+Auditor de lectura.
+
+Policies y middleware de autorización.
+Protección CSRF, rate limiting y sesiones seguras.
+Registro inicial de auditoría.
+Pruebas de acceso y permisos.
+Resultado: cada usuario solo puede acceder a las funciones autorizadas.
+
+Etapa 3. Administración del instrumento
+Objetivo: consultar y mantener la estructura del modelo de evaluación.
+Incluye:
+Consulta de modelos y versiones.
+Visualización jerárquica de dominios, criterios y descriptores.
+Pesos y orden de los dominios.
+Escala de calificación.
+Categorías de resultado.
+Publicación y archivo de versiones.
+Protección contra modificaciones de instrumentos ya utilizados.
+Resultado: instrumento versionado y listo para ser usado en evaluaciones.
+
+Etapa 4. Creación y configuración de evaluaciones
+Objetivo: iniciar formalmente un proceso de evaluación.
+Incluye:
+Crear evaluación.
+Seleccionar versión del instrumento.
+Registrar fechas y tipo general de escenario.
+Asignar responsables por dominio.
+Asignar evaluadores.
+Generar automáticamente:Cinco dominios de evaluación.
+Las 44 instancias de descriptores.
+
+Controlar los estados y transiciones del proceso.
+Dashboard de avance inicial.
+Resultado: evaluación configurada y preparada para autoevaluación y carga documental.
+
+Etapa 5. Autoevaluación por dominio
+Objetivo: recopilar la valoración narrativa previa.
+Incluye:
+Texto de autoevaluación por dominio.
+Contador y límite de 250 palabras.
+Guardado como borrador.
+Envío definitivo.
+Control por responsable asignado.
+Consulta para evaluadores.
+Registro de cambios y fechas.
+Livewire puede utilizarse aquí por el contador de palabras y guardado dinámico.
+Resultado: los cinco dominios cuentan con autoevaluaciones enviadas.
+
+Etapa 6. Gestión documental de evidencias
+Objetivo: cargar uno o varios archivos por descriptor.
+Incluye:
+Navegación por dominio, criterio y descriptor.
+Carga múltiple de archivos.
+Almacenamiento privado.
+Validación de extensión, MIME y tamaño.
+Nombres internos no predecibles.
+Hash SHA-256.
+Prevención de duplicados.
+Eliminación lógica controlada.
+Descargas exclusivamente autorizadas.
+Evidencias mediante enlace como complemento.
+Historial de cargas y descargas.
+Protección contra archivos ejecutables o peligrosos.
+Livewire es conveniente para carga múltiple, progreso y actualización de la lista.
+Resultado: cada descriptor puede tener evidencia documental trazable y protegida.
+
+Etapa 7. Evaluación, observaciones y subsanación
+Objetivo: revisar evidencias y asignar calificaciones.
+Incluye:
+Bandeja del evaluador.
+Visualización segura de documentos.
+Calificación:0: no cumple.
+1: cumple parcialmente.
+2: cumple.
+
+Impedir calificar sin archivos.
+Observaciones por descriptor.
+Respuestas y subsanaciones.
+Estados de revisión.
+Historial de calificaciones.
+Bloqueo de modificaciones después del cierre.
+Resultado: los 44 descriptores pueden ser revisados y calificados con trazabilidad.
+
+Etapa 8. Resultados y cierre
+Objetivo: calcular y presentar el resultado oficial.
+Incluye:
+Puntaje por criterio.
+Resultado por dominio.
+Aplicación de los pesos.
+Puntaje general.
+Porcentaje de avance.
+Categoría final.
+Impedir cierre con pendientes.
+Validar las cinco autoevaluaciones.
+Cierre formal por usuario autorizado.
+Resumen ejecutivo y gráficos accesibles.
+Resultado: evaluación cerrada con resultado reproducible y protegido.
+
+Etapa 9. Reportes, auditoría y notificaciones
+Objetivo: facilitar el control institucional.
+Incluye:
+Reporte general de evaluación.
+Reporte por dominio.
+Detalle de calificaciones y observaciones.
+Exportación PDF y, si se requiere, Excel.
+Registro de accesos y descargas.
+Bitácora de cambios.
+Notificaciones internas.
+Filtros por usuario, fecha y acción.
+Resultado: información útil para seguimiento, control y auditoría.
+
+Etapa 10. Fortalecimiento y despliegue
+Objetivo: preparar la operación institucional en Apache.
+Incluye:
+Pruebas funcionales y de autorización.
+Pruebas del cálculo.
+Revisión de accesibilidad y dispositivos móviles.
+Límites de carga en PHP y Apache.
+Cabeceras de seguridad.
+HTTPS y cookies seguras.
+Optimización de Laravel.
+Copias de seguridad de MySQL y documentos.
+Procedimiento de recuperación.
+Manual técnico y manual de usuario.
+Despliegue y verificación final.
+Resultado: sistema preparado para producción y recuperación ante incidentes.

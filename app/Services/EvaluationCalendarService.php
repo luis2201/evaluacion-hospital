@@ -1,0 +1,103 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\EstadoEvaluacion;
+use App\Enums\EstadoEvaluacionDescriptor;
+use App\Enums\EstadoEvaluacionDominio;
+use App\Models\Auditoria;
+use App\Models\Evaluacion;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+
+class EvaluationCalendarService
+{
+    public function syncAll(): int
+    {
+        $updated = 0;
+        Evaluacion::query()
+            ->whereIn('estado', [EstadoEvaluacion::Borrador->value, EstadoEvaluacion::CargaEvidencias->value])
+            ->pluck('id')
+            ->each(function (int $id) use (&$updated): void {
+                $updated += $this->syncById($id) ? 1 : 0;
+            });
+
+        return $updated;
+    }
+
+    public function sync(Evaluacion $evaluation): bool
+    {
+        $changed = $this->syncById($evaluation->id);
+        if ($changed) {
+            $evaluation->refresh();
+        }
+
+        return $changed;
+    }
+
+    public function isLoadingOpen(Evaluacion $evaluation): bool
+    {
+        $today = today();
+        $reviewDate = $this->reviewDate($evaluation);
+
+        return $evaluation->estado === EstadoEvaluacion::CargaEvidencias
+            && $evaluation->fecha_inicio !== null
+            && $evaluation->fecha_limite_carga !== null
+            && $today->betweenIncluded($evaluation->fecha_inicio, $evaluation->fecha_limite_carga)
+            && ($reviewDate === null || $today->lt($reviewDate));
+    }
+
+    public function reviewDate(Evaluacion $evaluation): ?Carbon
+    {
+        return $evaluation->fecha_inicio_evaluacion
+            ?? $evaluation->fecha_limite_carga?->copy()->addDay();
+    }
+
+    private function syncById(int $evaluationId): bool
+    {
+        return DB::transaction(function () use ($evaluationId): bool {
+            $evaluation = Evaluacion::query()->lockForUpdate()->findOrFail($evaluationId);
+            if (! in_array($evaluation->estado, [EstadoEvaluacion::Borrador, EstadoEvaluacion::CargaEvidencias], true)) {
+                return false;
+            }
+            if ($evaluation->dominios()->count() === 0 || $evaluation->descriptores()->count() === 0 || $evaluation->evaluadores()->count() === 0) {
+                return false;
+            }
+
+            $today = today();
+            $reviewDate = $this->reviewDate($evaluation);
+            $newState = match (true) {
+                $reviewDate !== null && $today->gte($reviewDate) => EstadoEvaluacion::EnEvaluacion,
+                $evaluation->fecha_inicio !== null && $today->gte($evaluation->fecha_inicio) => EstadoEvaluacion::CargaEvidencias,
+                default => null,
+            };
+
+            if ($newState === null || $newState === $evaluation->estado) {
+                return false;
+            }
+
+            $before = $evaluation->getAttributes();
+            $evaluation->update(['estado' => $newState]);
+            if ($newState === EstadoEvaluacion::CargaEvidencias) {
+                $evaluation->dominios()->where('estado', EstadoEvaluacionDominio::Pendiente->value)->update(['estado' => EstadoEvaluacionDominio::EnCarga]);
+            }
+            if ($newState === EstadoEvaluacion::EnEvaluacion) {
+                $evaluation->dominios()->where('estado', EstadoEvaluacionDominio::Pendiente->value)->update(['estado' => EstadoEvaluacionDominio::EnCarga]);
+                $evaluation->descriptores()->where('estado', EstadoEvaluacionDescriptor::Pendiente->value)->update(['estado' => EstadoEvaluacionDescriptor::EnEvaluacion]);
+            }
+
+            Auditoria::query()->create([
+                'user_id' => null,
+                'accion' => 'EVALUACION_ESTADO_AUTOMATICO',
+                'tabla' => $evaluation->getTable(),
+                'registro_id' => $evaluation->id,
+                'valores_anteriores' => $before,
+                'valores_nuevos' => $evaluation->getAttributes(),
+                'ip_address' => null,
+                'user_agent' => 'Laravel Scheduler',
+            ]);
+
+            return true;
+        });
+    }
+}
