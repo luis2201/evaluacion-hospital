@@ -19,7 +19,7 @@ class UpdateEvaluationScheduleRequest extends FormRequest
             'fecha_inicio' => ['required', 'date'],
             'fecha_limite_carga' => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'fecha_inicio_evaluacion' => ['required', 'date', 'after:fecha_limite_carga'],
-            'fecha_cierre_prevista' => ['required', 'date', 'after_or_equal:fecha_inicio_evaluacion'],
+            'fecha_cierre_prevista' => ['required', 'date', 'after:fecha_inicio_evaluacion'],
         ];
     }
 

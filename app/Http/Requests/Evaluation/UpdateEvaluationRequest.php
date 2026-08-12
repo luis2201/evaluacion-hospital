@@ -22,7 +22,7 @@ class UpdateEvaluationRequest extends FormRequest
             'codigo' => ['required', 'string', 'max:50', Rule::unique('evaluaciones')->ignore($this->route('evaluacion'))], 'nombre' => ['required', 'string', 'max:200'],
             'descripcion' => ['nullable', 'string', 'max:3000'], 'tipo_escenario' => ['required', Rule::enum(TipoEscenario::class)],
             'fecha_inicio' => ['required', 'date'], 'fecha_limite_carga' => ['required', 'date', 'after_or_equal:fecha_inicio'],
-            'fecha_inicio_evaluacion' => ['nullable', 'date', 'after:fecha_limite_carga'], 'fecha_cierre_prevista' => ['nullable', 'date', 'after_or_equal:fecha_inicio_evaluacion'],
+            'fecha_inicio_evaluacion' => ['nullable', 'date', 'after:fecha_limite_carga'], 'fecha_cierre_prevista' => ['nullable', 'date', 'after:fecha_inicio_evaluacion'],
             'responsables' => ['required', 'array'], 'responsables.*' => ['required', 'integer', 'exists:users,id'],
             'evaluadores' => ['required', 'array', 'min:1'], 'evaluadores.*' => ['required', 'integer', 'distinct', 'exists:users,id'],
         ];

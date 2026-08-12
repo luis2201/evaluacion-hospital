@@ -83,7 +83,31 @@ class EvaluationCalendarService
             }
             if ($newState === EstadoEvaluacion::EnEvaluacion) {
                 $evaluation->dominios()->where('estado', EstadoEvaluacionDominio::Pendiente->value)->update(['estado' => EstadoEvaluacionDominio::EnCarga]);
+                $missingEvidence = $evaluation->descriptores()
+                    ->whereNull('calificacion')
+                    ->whereDoesntHave('archivos')
+                    ->update([
+                        'estado' => EstadoEvaluacionDescriptor::Evaluado->value,
+                        'calificacion' => 0,
+                        'calificacion_automatica' => true,
+                        'motivo_calificacion' => 'ARCHIVO_NO_CARGADO',
+                        'observacion_evaluador' => 'Calificación automática por cierre de la fase de carga sin archivo de evidencia.',
+                        'evaluado_por' => null,
+                        'evaluado_at' => now(),
+                    ]);
                 $evaluation->descriptores()->where('estado', EstadoEvaluacionDescriptor::Pendiente->value)->update(['estado' => EstadoEvaluacionDescriptor::EnEvaluacion]);
+                if ($missingEvidence > 0) {
+                    Auditoria::query()->create([
+                        'user_id' => null,
+                        'accion' => 'DESCRIPTORES_SIN_ARCHIVO_CALIFICADOS',
+                        'tabla' => 'evaluacion_descriptores',
+                        'registro_id' => $evaluation->id,
+                        'valores_anteriores' => null,
+                        'valores_nuevos' => ['cantidad' => $missingEvidence, 'calificacion' => 0, 'motivo' => 'ARCHIVO_NO_CARGADO'],
+                        'ip_address' => null,
+                        'user_agent' => 'Laravel Scheduler',
+                    ]);
+                }
             }
 
             Auditoria::query()->create([

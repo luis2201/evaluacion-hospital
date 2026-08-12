@@ -12,11 +12,11 @@ class EvaluacionDescriptor extends Model
 {
     protected $table = 'evaluacion_descriptores';
 
-    protected $fillable = ['evaluacion_id', 'descriptor_id', 'estado', 'calificacion', 'observacion_evaluador', 'evaluado_por', 'evaluado_at'];
+    protected $fillable = ['evaluacion_id', 'descriptor_id', 'estado', 'calificacion', 'calificacion_automatica', 'motivo_calificacion', 'observacion_evaluador', 'evaluado_por', 'evaluado_at'];
 
     protected function casts(): array
     {
-        return ['estado' => EstadoEvaluacionDescriptor::class, 'calificacion' => CalificacionDescriptor::class, 'evaluado_at' => 'datetime'];
+        return ['estado' => EstadoEvaluacionDescriptor::class, 'calificacion' => CalificacionDescriptor::class, 'calificacion_automatica' => 'boolean', 'evaluado_at' => 'datetime'];
     }
 
     public function evaluacion(): BelongsTo

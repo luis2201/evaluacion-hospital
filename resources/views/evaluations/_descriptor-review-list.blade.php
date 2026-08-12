@@ -9,7 +9,7 @@
                     <summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 hover:bg-slate-50">
                         <div class="min-w-0"><p class="text-sm font-semibold text-slate-800">{{ $descriptorItem->descriptor->codigo }}</p><p class="mt-1 text-sm/6 text-slate-600">{{ $descriptorItem->descriptor->descripcion }}</p></div>
                         <div class="flex shrink-0 items-center gap-2">
-                            @if($descriptorItem->calificacion !== null)<x-ui.badge variant="success">{{ $descriptorItem->calificacion->value }} / 2</x-ui.badge>@elseif($pendingObservation)<x-ui.badge variant="warning">Observado</x-ui.badge>@else<x-ui.badge>Pendiente</x-ui.badge>@endif
+                            @if($descriptorItem->calificacion_automatica && $descriptorItem->motivo_calificacion === 'ARCHIVO_NO_CARGADO')<x-ui.badge variant="warning">0 / 2 · Archivo no cargado</x-ui.badge>@elseif($descriptorItem->calificacion !== null)<x-ui.badge variant="success">{{ $descriptorItem->calificacion->value }} / 2</x-ui.badge>@elseif($pendingObservation)<x-ui.badge variant="warning">Observado</x-ui.badge>@else<x-ui.badge>Pendiente</x-ui.badge>@endif
                             <span class="text-slate-400 transition group-open:rotate-180">⌄</span>
                         </div>
                     </summary>
@@ -20,7 +20,7 @@
                                 @forelse($descriptorItem->archivos as $file)
                                     <div class="rounded-xl border border-slate-200 bg-white p-3"><p class="truncate text-sm font-semibold text-slate-800">{{ $file->nombre_original }}</p><div class="mt-2 flex gap-3 text-xs font-semibold">@if(in_array($file->mime_type, ['application/pdf', 'image/jpeg', 'image/png'], true))<a target="_blank" rel="noopener" href="{{ route('evaluations.descriptors.files.preview', [$evaluacion, $descriptorItem, $file]) }}" class="text-brand-700">Visualizar</a>@endif<a href="{{ route('evaluations.descriptors.files.download', [$evaluacion, $descriptorItem, $file]) }}" class="text-brand-700">Descargar</a></div></div>
                                 @empty
-                                    <p class="rounded-xl bg-white p-3 text-sm text-slate-500 sm:col-span-2">Sin archivos. Este descriptor no puede calificarse.</p>
+                                    <p class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800 sm:col-span-2">ARCHIVO NO CARGADO. El sistema asignó automáticamente 0 al finalizar la fase de carga.</p>
                                 @endforelse
                             </div>
                         </div>

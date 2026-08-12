@@ -41,3 +41,7 @@ Los límites documentales y de seguridad son consumidos por las validaciones de 
 El administrador dispone de una vista técnica de versiones de PHP, Laravel y MySQL, disponibilidad del almacenamiento privado y accesos contextuales al cronograma de las evaluaciones. Las fechas permanecen asociadas a cada evaluación para preservar la trazabilidad de cada proceso.
 
 El cronograma puede editarse desde Configuración mientras la evaluación no esté cerrada ni cancelada. Se valida el orden inicio de carga → límite de carga → inicio de revisión → cierre previsto, se impide reabrir una fase ya finalizada y cada ajuste genera `EVALUACION_CRONOGRAMA_ACTUALIZADO` antes de sincronizar inmediatamente el estado.
+
+La carga puede realizarse en un único día, pero las fases no se superponen: `fecha_limite_carga < fecha_inicio_evaluacion < fecha_cierre_prevista`. Esta regla está implementada en las solicitudes Laravel y en la restricción MySQL `chk_evaluacion_cronograma`.
+
+Al comenzar la revisión, cada descriptor que no tenga un archivo activo recibe automáticamente calificación `0`, estado `EVALUADO` y motivo `ARCHIVO_NO_CARGADO`. El evaluador lo identifica mediante una leyenda visible y el evento consolidado `DESCRIPTORES_SIN_ARCHIVO_CALIFICADOS` conserva la cantidad afectada. MySQL permite un descriptor sin archivo únicamente cuando se trata de este cero automático; una calificación manual sin evidencia continúa bloqueada.

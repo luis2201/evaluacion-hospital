@@ -98,6 +98,19 @@ class RoleBasedSettingsTest extends TestCase
         $this->actingAs($responsible)->put(route('admin.evaluations.schedule.update', $evaluation), $payload)->assertForbidden();
     }
 
+    public function test_schedule_stages_cannot_overlap(): void
+    {
+        $administrator = $this->userWithRole(CodigoRol::Administrador);
+        $evaluation = $this->evaluation($administrator, EstadoEvaluacion::Borrador);
+
+        $this->actingAs($administrator)->put(route('admin.evaluations.schedule.update', $evaluation), [
+            'fecha_inicio' => today()->addDay()->toDateString(),
+            'fecha_limite_carga' => today()->addDays(5)->toDateString(),
+            'fecha_inicio_evaluacion' => today()->addDays(5)->toDateString(),
+            'fecha_cierre_prevista' => today()->addDays(5)->toDateString(),
+        ])->assertSessionHasErrors(['fecha_inicio_evaluacion', 'fecha_cierre_prevista']);
+    }
+
     /** @return array<string, int|string> */
     private function settingsPayload(): array
     {
