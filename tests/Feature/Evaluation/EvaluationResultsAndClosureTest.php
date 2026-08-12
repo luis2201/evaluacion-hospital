@@ -42,6 +42,25 @@ class EvaluationResultsAndClosureTest extends TestCase
         $this->assertNull($evaluation->fresh()->cerrada_at);
     }
 
+    public function test_expired_loading_uses_noncompliant_and_pending_review_legends(): void
+    {
+        [$evaluation, $administrator] = $this->evaluationInReview();
+        $evaluation->descriptores()->firstOrFail()->update([
+            'estado' => EstadoEvaluacionDescriptor::Evaluado,
+            'calificacion' => 0,
+            'calificacion_automatica' => true,
+            'motivo_calificacion' => 'ARCHIVO_NO_CARGADO',
+            'evaluado_at' => now(),
+        ]);
+
+        $this->actingAs($administrator)->get(route('evaluations.results', $evaluation))
+            ->assertOk()
+            ->assertSee('Revisión en curso')
+            ->assertSee('Descriptores incumplidos')
+            ->assertSee('Pendientes de revisión')
+            ->assertDontSee('Descriptores pendientes');
+    }
+
     public function test_complete_evaluation_is_closed_with_reproducible_official_result(): void
     {
         [$evaluation, $administrator, $responsible, $evaluator] = $this->evaluationInReview();

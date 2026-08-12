@@ -45,3 +45,5 @@ El cronograma puede editarse desde Configuración mientras la evaluación no est
 La carga puede realizarse en un único día, pero las fases no se superponen: `fecha_limite_carga < fecha_inicio_evaluacion < fecha_cierre_prevista`. Esta regla está implementada en las solicitudes Laravel y en la restricción MySQL `chk_evaluacion_cronograma`.
 
 Al comenzar la revisión, cada descriptor que no tenga un archivo activo recibe automáticamente calificación `0`, estado `EVALUADO` y motivo `ARCHIVO_NO_CARGADO`. El evaluador lo identifica mediante una leyenda visible y el evento consolidado `DESCRIPTORES_SIN_ARCHIVO_CALIFICADOS` conserva la cantidad afectada. MySQL permite un descriptor sin archivo únicamente cuando se trata de este cero automático; una calificación manual sin evidencia continúa bloqueada.
+
+Los resultados interpretan las leyendas según el cronograma. Durante la carga muestran pendientes de evidencia; vencido el plazo muestran descriptores incumplidos (calificación `0`) y separan los archivos pendientes de revisión. Las alertas distinguen evaluación programada, carga abierta, revisión en curso, cierre previsto vencido y cierre formal.

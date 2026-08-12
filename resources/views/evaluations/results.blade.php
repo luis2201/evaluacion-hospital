@@ -33,8 +33,14 @@
 
         @if($evaluacion->estado === \App\Enums\EstadoEvaluacion::Cerrada)
             <x-ui.alert variant="success" title="Evaluación cerrada" class="mt-6">Cierre formal realizado el {{ $evaluacion->cerrada_at?->format('d/m/Y H:i') }} por {{ $evaluacion->cerrador?->name }}. El resultado ya no admite modificaciones.</x-ui.alert>
-        @elseif($general->descriptores_pendientes > 0 || $submitted_self_assessments < $total_domains || $open_observations > 0)
-            <x-ui.alert variant="info" title="Resultado provisional" class="mt-6">Para cerrar faltan {{ $general->descriptores_pendientes }} calificaciones, {{ $total_domains - $submitted_self_assessments }} autoevaluaciones y resolver {{ $open_observations }} observaciones.</x-ui.alert>
+        @elseif($timeline['scheduled'])
+            <x-ui.alert variant="info" title="Evaluación programada" class="mt-6">La carga de evidencias iniciará el {{ $evaluacion->fecha_inicio->format('d/m/Y') }}. Los resultados todavía no son definitivos.</x-ui.alert>
+        @elseif($timeline['loading_open'])
+            <x-ui.alert variant="info" title="Carga de evidencias abierta" class="mt-6">El plazo finaliza el {{ $evaluacion->fecha_limite_carga->format('d/m/Y') }}. Existen {{ $pending_evidence_descriptors }} descriptores pendientes de evidencia.</x-ui.alert>
+        @elseif($timeline['closing_overdue'])
+            <x-ui.alert variant="warning" title="Cierre previsto vencido" class="mt-6">La fecha prevista fue {{ $evaluacion->fecha_cierre_prevista->format('d/m/Y') }}. Hay {{ $noncompliant_descriptors }} descriptores incumplidos, {{ $pending_review_descriptors }} pendientes de revisión, {{ $total_domains - $submitted_self_assessments }} autoevaluaciones pendientes y {{ $open_observations }} observaciones por resolver.</x-ui.alert>
+        @elseif($timeline['review_started'])
+            <x-ui.alert variant="info" title="Revisión en curso" class="mt-6">La carga documental finalizó. Hay {{ $noncompliant_descriptors }} descriptores incumplidos y {{ $pending_review_descriptors }} pendientes de revisión por el evaluador.</x-ui.alert>
         @endif
 
         <div class="mt-6 grid gap-6 xl:grid-cols-2">
@@ -57,7 +63,12 @@
                     <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Estado del cálculo</dt><dd class="font-bold text-slate-800">{{ str($general->estado_calculo)->lower()->headline() }}</dd></div>
                     <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Dominios calculados</dt><dd class="font-bold text-slate-800">{{ $general->dominios_con_resultado }}</dd></div>
                     <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Descriptores calificados</dt><dd class="font-bold text-slate-800">{{ $general->descriptores_calificados }}</dd></div>
-                    <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Descriptores pendientes</dt><dd class="font-bold {{ $general->descriptores_pendientes ? 'text-amber-700' : 'text-emerald-700' }}">{{ $general->descriptores_pendientes }}</dd></div>
+                    @if($timeline['loading_expired'])
+                        <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Descriptores incumplidos</dt><dd class="font-bold {{ $noncompliant_descriptors ? 'text-red-700' : 'text-emerald-700' }}">{{ $noncompliant_descriptors }}</dd></div>
+                        <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Pendientes de revisión</dt><dd class="font-bold {{ $pending_review_descriptors ? 'text-amber-700' : 'text-emerald-700' }}">{{ $pending_review_descriptors }}</dd></div>
+                    @else
+                        <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Pendientes de evidencia</dt><dd class="font-bold {{ $pending_evidence_descriptors ? 'text-amber-700' : 'text-emerald-700' }}">{{ $pending_evidence_descriptors }}</dd></div>
+                    @endif
                     <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Fecha efectiva de cierre</dt><dd class="font-bold text-slate-800">{{ $evaluacion->fecha_cierre?->format('d/m/Y') ?? 'Pendiente' }}</dd></div>
                 </dl>
             </x-ui.card>
