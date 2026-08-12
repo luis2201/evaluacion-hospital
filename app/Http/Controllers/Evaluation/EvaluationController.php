@@ -53,7 +53,7 @@ class EvaluationController extends Controller
         $calendar->sync($evaluacion);
         $canReview = $request->user()->can('review', $evaluacion);
         $hasAssignedDomains = $evaluacion->dominios()->where('responsable_id', $request->user()->id)->exists();
-        $consultOnly = $request->user()->isAdministrator();
+        $consultOnly = $request->user()->isAdministrator() || $request->user()->hasRole(CodigoRol::AuditorLectura);
         $reviewOnly = $canReview && ! $request->user()->isAdministrator() && ! $hasAssignedDomains;
         $requestedSection = $request->string('seccion')->value();
         $section = match (true) {

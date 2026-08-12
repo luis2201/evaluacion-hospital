@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Services\SystemSettingsService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt(['email' => Str::lower($this->string('email')), 'password' => $this->string('password'), 'activo' => true], $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey(), 60);
+            RateLimiter::hit($this->throttleKey(), app(SystemSettingsService::class)->integer('login_lock_seconds'));
             throw ValidationException::withMessages(['email' => 'Las credenciales proporcionadas no son correctas o la cuenta está desactivada.']);
         }
 
@@ -35,7 +36,7 @@ class LoginRequest extends FormRequest
 
     private function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), app(SystemSettingsService::class)->integer('login_attempts'))) {
             return;
         }
 

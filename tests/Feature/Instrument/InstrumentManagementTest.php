@@ -17,10 +17,12 @@ class InstrumentManagementTest extends TestCase
 
     protected $seed = true;
 
-    public function test_authenticated_user_can_view_published_instrument(): void
+    public function test_responsible_user_can_view_published_instrument(): void
     {
         $model = ModeloEvaluacion::query()->firstOrFail();
-        $this->actingAs(User::factory()->create())->get(route('instruments.show', $model))
+        $user = User::factory()->create();
+        $user->roles()->attach(Role::query()->where('codigo', CodigoRol::ResponsableDominio->value)->firstOrFail(), ['created_at' => now()]);
+        $this->actingAs($user)->get(route('instruments.show', $model))
             ->assertOk()->assertSee('Aspectos académicos')->assertSee('Escala oficial');
     }
 

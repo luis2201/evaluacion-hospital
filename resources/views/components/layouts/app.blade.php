@@ -1,5 +1,10 @@
 @props(['title' => 'Panel principal'])
 
+@php
+    $roleNavigation = app(\App\Services\RoleExperienceService::class)->navigation(auth()->user());
+    $systemSettings = app(\App\Services\SystemSettingsService::class);
+@endphp
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,7 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#122b88">
-    <title>{{ $title }} · {{ config('app.name') }}</title>
+    <title>{{ $title }} · {{ $systemSettings->get('institution_name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
@@ -23,7 +28,7 @@
                 <a href="{{ route('dashboard') }}" class="flex min-w-0 items-center gap-3" aria-label="Ir al panel principal">
                     <img src="{{ asset('images/brand/hospital-simulacion.png') }}" alt="" class="size-11 rounded-xl object-contain">
                     <span class="min-w-0 leading-tight">
-                        <span class="block truncate text-sm font-bold text-navy-900">Hospital de Simulación</span>
+                        <span class="block truncate text-sm font-bold text-navy-900">{{ $systemSettings->get('institution_name') }}</span>
                         <span class="block text-xs font-medium text-slate-500">Sistema de evaluación</span>
                     </span>
                 </a>
@@ -38,33 +43,30 @@
                     <x-ui.icon name="dashboard" class="size-5" />
                     Panel principal
                 </a>
-                <a href="{{ route('instruments.index') }}" class="nav-link {{ request()->routeIs('instruments.*', 'admin.instruments.*') ? 'nav-link-active' : '' }}">
+                @if($roleNavigation['instruments'])<a href="{{ route('instruments.index') }}" class="nav-link {{ request()->routeIs('instruments.*', 'admin.instruments.*') ? 'nav-link-active' : '' }}">
                     <x-ui.icon name="layers" class="size-5" /> Instrumento
-                </a>
+                </a>@endif
                 <a href="{{ route('evaluations.index') }}" class="nav-link {{ request()->routeIs('evaluations.*', 'admin.evaluations.*') ? 'nav-link-active' : '' }}">
                     <x-ui.icon name="clipboard" class="size-5" /> Evaluaciones
                 </a>
 
-                @if(auth()->user()->isAdministrator())
+                @if($roleNavigation['users'])
                     <p class="mb-2 mt-7 px-3 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-slate-400">Administración</p>
                     <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'nav-link-active' : '' }}">
                         <x-ui.icon name="users" class="size-5" /> Usuarios
                     </a>
                 @endif
 
-                <p class="mb-2 mt-7 px-3 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-slate-400">Próximos módulos</p>
-                @foreach ([['settings', 'Configuración']] as [$icon, $label])
-                    <span class="nav-link cursor-not-allowed opacity-55" aria-disabled="true">
-                        <x-ui.icon :name="$icon" class="size-5" />
-                        {{ $label }}
-                    </span>
-                @endforeach
+                <p class="mb-2 mt-7 px-3 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-slate-400">Cuenta y sistema</p>
+                <a href="{{ route('settings.show') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'nav-link-active' : '' }}">
+                    <x-ui.icon name="settings" class="size-5" /> Configuración
+                </a>
             </nav>
 
             <div class="border-t border-slate-100 p-4">
                 <div class="rounded-xl bg-slate-50 p-3">
-                    <p class="text-xs font-semibold text-slate-500">Entorno inicial</p>
-                    <p class="mt-1 text-sm font-bold text-navy-900">Acceso seguro habilitado</p>
+                    <p class="text-xs font-semibold text-slate-500">Perfil activo</p>
+                    <p class="mt-1 truncate text-sm font-bold text-navy-900">{{ auth()->user()->roles->pluck('nombre')->join(', ') }}</p>
                 </div>
             </div>
         </aside>
@@ -76,7 +78,7 @@
                         <x-ui.icon name="menu" class="size-5" />
                     </button>
                     <div class="min-w-0">
-                        <p class="truncate text-xs font-semibold uppercase tracking-wider text-brand-700">MEC-SIM</p>
+                        <p class="truncate text-xs font-semibold uppercase tracking-wider text-brand-700">{{ $systemSettings->get('institution_short_name') }}</p>
                         <p class="truncate text-sm font-bold text-slate-800">Gestión de calidad institucional</p>
                     </div>
                 </div>
