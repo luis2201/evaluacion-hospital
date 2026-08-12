@@ -68,6 +68,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
         Route::post('evaluaciones', [EvaluationController::class, 'store'])->name('evaluations.store');
         Route::get('evaluaciones/{evaluacion}/editar', [EvaluationController::class, 'edit'])->name('evaluations.edit');
         Route::put('evaluaciones/{evaluacion}', [EvaluationController::class, 'update'])->name('evaluations.update');
+        Route::put('evaluaciones/{evaluacion}/cronograma', [EvaluationController::class, 'updateSchedule'])->name('evaluations.schedule.update');
         Route::post('evaluaciones/{evaluacion}/habilitar-carga', [EvaluationWorkflowController::class, 'start'])->name('evaluations.start');
         Route::post('evaluaciones/{evaluacion}/iniciar-revision', [EvaluationWorkflowController::class, 'startReview'])->name('evaluations.review.start');
         Route::post('evaluaciones/{evaluacion}/cancelar', [EvaluationWorkflowController::class, 'cancel'])->name('evaluations.cancel');

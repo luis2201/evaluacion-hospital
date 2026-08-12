@@ -28,7 +28,7 @@ class SettingsController extends Controller
                 'environment' => app()->environment(),
                 'storage_writable' => is_writable(storage_path('app/private')),
             ];
-            $evaluations = Evaluacion::query()->latest()->limit(5)->get();
+            $evaluations = Evaluacion::query()->latest()->get();
         }
 
         return view('settings.show', [

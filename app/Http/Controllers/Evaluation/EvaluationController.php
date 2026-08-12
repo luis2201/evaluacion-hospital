@@ -8,6 +8,7 @@ use App\Enums\EstadoModeloEvaluacion;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Evaluation\StoreEvaluationRequest;
 use App\Http\Requests\Evaluation\UpdateEvaluationRequest;
+use App\Http\Requests\Evaluation\UpdateEvaluationScheduleRequest;
 use App\Models\Evaluacion;
 use App\Models\ModeloEvaluacion;
 use App\Models\User;
@@ -120,6 +121,16 @@ class EvaluationController extends Controller
         $audit->recordModel('EVALUACION_CONFIGURADA', $evaluacion->fresh(), $before);
 
         return redirect()->route('evaluations.show', $evaluacion)->with('status', 'Configuración actualizada.');
+    }
+
+    public function updateSchedule(UpdateEvaluationScheduleRequest $request, Evaluacion $evaluacion, AuditService $audit, EvaluationCalendarService $calendar): RedirectResponse
+    {
+        $before = $evaluacion->getAttributes();
+        DB::transaction(fn () => $evaluacion->update($request->validated()));
+        $audit->recordModel('EVALUACION_CRONOGRAMA_ACTUALIZADO', $evaluacion->fresh(), $before);
+        $calendar->sync($evaluacion);
+
+        return back()->with('status', 'El cronograma de la evaluación fue actualizado.');
     }
 
     private function formData($models, ?ModeloEvaluacion $selectedModel): array

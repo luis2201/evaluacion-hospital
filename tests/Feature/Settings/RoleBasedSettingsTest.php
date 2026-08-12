@@ -3,7 +3,10 @@
 namespace Tests\Feature\Settings;
 
 use App\Enums\CodigoRol;
+use App\Enums\EstadoEvaluacion;
 use App\Http\Requests\Evaluation\StoreDescriptorFilesRequest;
+use App\Models\Evaluacion;
+use App\Models\ModeloEvaluacion;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -60,6 +63,41 @@ class RoleBasedSettingsTest extends TestCase
         $this->get(route('instruments.index'))->assertForbidden();
     }
 
+    public function test_administrator_can_update_active_evaluation_schedule(): void
+    {
+        $administrator = $this->userWithRole(CodigoRol::Administrador);
+        $evaluation = $this->evaluation($administrator, EstadoEvaluacion::EnEvaluacion);
+
+        $this->actingAs($administrator)->put(route('admin.evaluations.schedule.update', $evaluation), [
+            'evaluation_id' => $evaluation->id,
+            'fecha_inicio' => today()->subMonth()->toDateString(),
+            'fecha_limite_carga' => today()->subDay()->toDateString(),
+            'fecha_inicio_evaluacion' => today()->toDateString(),
+            'fecha_cierre_prevista' => today()->addMonth()->toDateString(),
+        ])->assertSessionHas('status');
+
+        $this->assertSame(today()->addMonth()->toDateString(), $evaluation->fresh()->fecha_cierre_prevista->toDateString());
+        $this->assertDatabaseHas('auditorias', ['accion' => 'EVALUACION_CRONOGRAMA_ACTUALIZADO', 'registro_id' => $evaluation->id]);
+    }
+
+    public function test_schedule_cannot_reopen_review_or_be_changed_by_unauthorized_role(): void
+    {
+        $administrator = $this->userWithRole(CodigoRol::Administrador);
+        $evaluation = $this->evaluation($administrator, EstadoEvaluacion::EnEvaluacion);
+        $payload = [
+            'fecha_inicio' => today()->toDateString(),
+            'fecha_limite_carga' => today()->addDay()->toDateString(),
+            'fecha_inicio_evaluacion' => today()->addDays(2)->toDateString(),
+            'fecha_cierre_prevista' => today()->addMonth()->toDateString(),
+        ];
+
+        $this->actingAs($administrator)->put(route('admin.evaluations.schedule.update', $evaluation), $payload)
+            ->assertSessionHasErrors('fecha_inicio_evaluacion');
+
+        $responsible = $this->userWithRole(CodigoRol::ResponsableDominio);
+        $this->actingAs($responsible)->put(route('admin.evaluations.schedule.update', $evaluation), $payload)->assertForbidden();
+    }
+
     /** @return array<string, int|string> */
     private function settingsPayload(): array
     {
@@ -83,5 +121,21 @@ class RoleBasedSettingsTest extends TestCase
         $user->roles()->attach($role, ['created_at' => now()]);
 
         return $user;
+    }
+
+    private function evaluation(User $administrator, EstadoEvaluacion $state): Evaluacion
+    {
+        return Evaluacion::query()->create([
+            'modelo_evaluacion_id' => ModeloEvaluacion::query()->firstOrFail()->id,
+            'codigo' => 'EVAL-SCHEDULE-'.str()->random(6),
+            'nombre' => 'Evaluación con cronograma editable',
+            'tipo_escenario' => 'MIXTA',
+            'fecha_inicio' => today()->subMonth(),
+            'fecha_limite_carga' => today()->subWeek(),
+            'fecha_inicio_evaluacion' => today()->subDays(6),
+            'fecha_cierre_prevista' => today()->addWeek(),
+            'estado' => $state,
+            'creada_por' => $administrator->id,
+        ]);
     }
 }

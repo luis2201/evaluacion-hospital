@@ -39,3 +39,5 @@ Los límites documentales y de seguridad son consumidos por las validaciones de 
 ## Estado y cronograma
 
 El administrador dispone de una vista técnica de versiones de PHP, Laravel y MySQL, disponibilidad del almacenamiento privado y accesos contextuales al cronograma de las evaluaciones. Las fechas permanecen asociadas a cada evaluación para preservar la trazabilidad de cada proceso.
+
+El cronograma puede editarse desde Configuración mientras la evaluación no esté cerrada ni cancelada. Se valida el orden inicio de carga → límite de carga → inicio de revisión → cierre previsto, se impide reabrir una fase ya finalizada y cada ajuste genera `EVALUACION_CRONOGRAMA_ACTUALIZADO` antes de sincronizar inmediatamente el estado.
