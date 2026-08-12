@@ -85,6 +85,34 @@ class EvaluationResultsAndClosureTest extends TestCase
         $this->get(route('evaluations.results', $evaluation))->assertOk()->assertSee('Resultado oficial');
     }
 
+    public function test_evaluation_can_close_with_document_and_self_assessment_noncompliance_recorded(): void
+    {
+        [$evaluation, $administrator, $responsible] = $this->evaluationInReview();
+        foreach ($evaluation->dominios as $domain) {
+            $domain->autoevaluacion()->create([
+                'contenido' => 'Autoevaluación no enviada dentro del plazo de carga establecido.',
+                'cantidad_palabras' => 9,
+                'estado' => EstadoAutoevaluacion::Incumplida,
+                'registrada_por' => $responsible->id,
+            ]);
+        }
+        $evaluation->descriptores()->update([
+            'estado' => EstadoEvaluacionDescriptor::Evaluado->value,
+            'calificacion' => 0,
+            'calificacion_automatica' => true,
+            'motivo_calificacion' => 'ARCHIVO_NO_CARGADO',
+            'evaluado_at' => now(),
+        ]);
+
+        $this->actingAs($administrator)->get(route('evaluations.results', $evaluation))
+            ->assertOk()
+            ->assertSee('Autoevaluaciones incumplidas')
+            ->assertSee('Incumplidas: 5');
+        $this->post(route('admin.evaluations.close', $evaluation))->assertSessionHas('status');
+
+        $this->assertSame(EstadoEvaluacion::Cerrada, $evaluation->fresh()->estado);
+    }
+
     /** @return array{Evaluacion, User, User, User} */
     private function evaluationInReview(): array
     {

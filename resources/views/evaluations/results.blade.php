@@ -28,7 +28,7 @@
             <x-ui.card><p class="text-sm text-slate-500">Puntaje general</p><p class="mt-2 text-3xl font-bold text-navy-900">{{ number_format((float) $general->puntaje_provisional, 2) }}<span class="text-base text-slate-400"> / 100</span></p></x-ui.card>
             <x-ui.card><p class="text-sm text-slate-500">Avance</p><p class="mt-2 text-3xl font-bold text-navy-900">{{ number_format((float) $general->porcentaje_avance, 2) }} %</p><p class="mt-1 text-xs text-slate-500">{{ $general->descriptores_calificados }} de {{ $general->total_descriptores }} descriptores</p></x-ui.card>
             <x-ui.card><p class="text-sm text-slate-500">Categoría</p><p class="mt-2 text-xl font-bold text-navy-900">{{ $general->categoria_final ?? 'Pendiente' }}</p><p class="mt-1 text-xs text-slate-500">Se oficializa al completar el proceso</p></x-ui.card>
-            <x-ui.card><p class="text-sm text-slate-500">Autoevaluaciones</p><p class="mt-2 text-3xl font-bold text-navy-900">{{ $submitted_self_assessments }} / {{ $total_domains }}</p><p class="mt-1 text-xs text-slate-500">Observaciones pendientes: {{ $open_observations }}</p></x-ui.card>
+            <x-ui.card><p class="text-sm text-slate-500">Autoevaluaciones enviadas</p><p class="mt-2 text-3xl font-bold text-navy-900">{{ $submitted_self_assessments }} / {{ $total_domains }}</p><p class="mt-1 text-xs {{ $missing_self_assessments ? 'font-semibold text-red-700' : 'text-slate-500' }}">Incumplidas: {{ $missing_self_assessments }} · Pendientes: {{ $pending_self_assessments }}</p></x-ui.card>
         </div>
 
         @if($evaluacion->estado === \App\Enums\EstadoEvaluacion::Cerrada)
@@ -38,9 +38,9 @@
         @elseif($timeline['loading_open'])
             <x-ui.alert variant="info" title="Carga de evidencias abierta" class="mt-6">El plazo finaliza el {{ $evaluacion->fecha_limite_carga->format('d/m/Y') }}. Existen {{ $pending_evidence_descriptors }} descriptores pendientes de evidencia.</x-ui.alert>
         @elseif($timeline['closing_overdue'])
-            <x-ui.alert variant="warning" title="Cierre previsto vencido" class="mt-6">La fecha prevista fue {{ $evaluacion->fecha_cierre_prevista->format('d/m/Y') }}. Hay {{ $noncompliant_descriptors }} descriptores incumplidos, {{ $pending_review_descriptors }} pendientes de revisión, {{ $total_domains - $submitted_self_assessments }} autoevaluaciones pendientes y {{ $open_observations }} observaciones por resolver.</x-ui.alert>
+            <x-ui.alert variant="warning" title="Cierre previsto vencido" class="mt-6">La fecha prevista fue {{ $evaluacion->fecha_cierre_prevista->format('d/m/Y') }}. Hay {{ $noncompliant_descriptors }} descriptores incumplidos, {{ $missing_self_assessments }} autoevaluaciones incumplidas, {{ $pending_review_descriptors }} pendientes de revisión, {{ $pending_self_assessments }} autoevaluaciones pendientes y {{ $open_observations }} observaciones por resolver.</x-ui.alert>
         @elseif($timeline['review_started'])
-            <x-ui.alert variant="info" title="Revisión en curso" class="mt-6">La carga documental finalizó. Hay {{ $noncompliant_descriptors }} descriptores incumplidos y {{ $pending_review_descriptors }} pendientes de revisión por el evaluador.</x-ui.alert>
+            <x-ui.alert variant="info" title="Revisión en curso" class="mt-6">La carga documental finalizó. Hay {{ $noncompliant_descriptors }} descriptores incumplidos, {{ $missing_self_assessments }} autoevaluaciones incumplidas y {{ $pending_review_descriptors }} pendientes de revisión por el evaluador.</x-ui.alert>
         @endif
 
         <div class="mt-6 grid gap-6 xl:grid-cols-2">
@@ -65,6 +65,7 @@
                     <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Descriptores calificados</dt><dd class="font-bold text-slate-800">{{ $general->descriptores_calificados }}</dd></div>
                     @if($timeline['loading_expired'])
                         <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Descriptores incumplidos</dt><dd class="font-bold {{ $noncompliant_descriptors ? 'text-red-700' : 'text-emerald-700' }}">{{ $noncompliant_descriptors }}</dd></div>
+                        <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Autoevaluaciones incumplidas</dt><dd class="font-bold {{ $missing_self_assessments ? 'text-red-700' : 'text-emerald-700' }}">{{ $missing_self_assessments }}</dd></div>
                         <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Pendientes de revisión</dt><dd class="font-bold {{ $pending_review_descriptors ? 'text-amber-700' : 'text-emerald-700' }}">{{ $pending_review_descriptors }}</dd></div>
                     @else
                         <div class="flex justify-between gap-3 py-3"><dt class="text-slate-500">Pendientes de evidencia</dt><dd class="font-bold {{ $pending_evidence_descriptors ? 'text-amber-700' : 'text-emerald-700' }}">{{ $pending_evidence_descriptors }}</dd></div>

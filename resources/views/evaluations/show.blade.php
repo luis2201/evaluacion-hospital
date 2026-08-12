@@ -87,6 +87,8 @@
                     </div>
                     @if($selectedDomain->autoevaluacion?->estado === \App\Enums\EstadoAutoevaluacion::Enviada)
                         <div class="mt-5 rounded-2xl bg-slate-50 p-5"><p class="whitespace-pre-line text-sm/6 text-slate-700">{{ $selectedDomain->autoevaluacion->contenido }}</p><p class="mt-4 text-xs text-slate-500">Enviada el {{ $selectedDomain->autoevaluacion->enviada_at?->format('d/m/Y H:i') }}</p></div>
+                    @elseif($selectedDomain->autoevaluacion?->estado === \App\Enums\EstadoAutoevaluacion::Incumplida)
+                        <x-ui.alert variant="warning" title="Autoevaluación incumplida" class="mt-5">No fue enviada dentro del plazo de carga y ya no puede registrarse.</x-ui.alert>
                     @elseif(auth()->id() === $selectedDomain->responsable_id && $evaluacion->estado === \App\Enums\EstadoEvaluacion::CargaEvidencias)
                         <form method="POST" action="{{ route('evaluations.domains.autoevaluation.store', [$evaluacion, $selectedDomain]) }}" class="mt-5 space-y-4">
                             @csrf
@@ -117,6 +119,8 @@
                     </div>
                     @if($selectedDomain->autoevaluacion?->estado === \App\Enums\EstadoAutoevaluacion::Enviada)
                         <div class="mt-5 rounded-2xl bg-slate-50 p-5"><p class="whitespace-pre-line text-sm/6 text-slate-700">{{ $selectedDomain->autoevaluacion->contenido }}</p><p class="mt-4 text-xs text-slate-500">Enviada el {{ $selectedDomain->autoevaluacion->enviada_at?->format('d/m/Y H:i') }}</p></div>
+                    @elseif($selectedDomain->autoevaluacion?->estado === \App\Enums\EstadoAutoevaluacion::Incumplida)
+                        <x-ui.alert variant="warning" title="Autoevaluación incumplida" class="mt-5">El responsable no la envió dentro del plazo establecido.</x-ui.alert>
                     @else
                         <p class="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">La autoevaluación todavía no ha sido enviada.</p>
                     @endif
@@ -137,6 +141,8 @@
                     </div>
                     @if($selectedDomain->autoevaluacion?->estado === \App\Enums\EstadoAutoevaluacion::Enviada)
                         <div class="mt-5 rounded-2xl bg-slate-50 p-5"><p class="whitespace-pre-line text-sm/6 text-slate-700">{{ $selectedDomain->autoevaluacion->contenido }}</p><p class="mt-4 text-xs text-slate-500">Enviada el {{ $selectedDomain->autoevaluacion->enviada_at?->format('d/m/Y H:i') }}</p></div>
+                    @elseif($selectedDomain->autoevaluacion?->estado === \App\Enums\EstadoAutoevaluacion::Incumplida)
+                        <x-ui.alert variant="warning" title="Autoevaluación incumplida" class="mt-5">No fue enviada durante la fase de carga documental.</x-ui.alert>
                     @else
                         <p class="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">La autoevaluación todavía no ha sido enviada.</p>
                     @endif

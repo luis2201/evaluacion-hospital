@@ -9,5 +9,6 @@ enum EstadoEvaluacionDominio: string
     case Enviado = 'ENVIADO';
     case Observado = 'OBSERVADO';
     case Completo = 'COMPLETO';
+    case Incumplido = 'INCUMPLIDO';
     case Cerrado = 'CERRADO';
 }

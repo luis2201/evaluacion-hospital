@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Enums\CalificacionDescriptor;
+use App\Enums\EstadoAutoevaluacion;
 use App\Enums\EstadoEvaluacion;
 use App\Enums\TipoEscenario;
 use PHPUnit\Framework\TestCase;
@@ -15,5 +16,6 @@ class DomainEnumsTest extends TestCase
         $this->assertSame('MIXTA', TipoEscenario::Mixta->value);
         $this->assertSame(0, CalificacionDescriptor::NoCumple->value);
         $this->assertSame(2, CalificacionDescriptor::Cumple->value);
+        $this->assertSame('INCUMPLIDA', EstadoAutoevaluacion::Incumplida->value);
     }
 }
