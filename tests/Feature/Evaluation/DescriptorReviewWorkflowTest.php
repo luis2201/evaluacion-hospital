@@ -42,7 +42,7 @@ class DescriptorReviewWorkflowTest extends TestCase
         $this->actingAs($administrator)->post(route('admin.evaluations.review.start', $evaluation))->assertSessionHas('status');
 
         $this->assertSame(EstadoEvaluacion::EnEvaluacion, $evaluation->fresh()->estado);
-        $this->assertSame(44, $evaluation->descriptores()->where('estado', EstadoEvaluacionDescriptor::EnEvaluacion->value)->count());
+        $this->assertSame(44, $evaluation->descriptores()->where('estado', EstadoEvaluacionDescriptor::Evaluado->value)->where('calificacion_automatica', true)->count());
         $this->assertDatabaseHas('auditorias', ['accion' => 'EVALUACION_REVISION_INICIADA', 'registro_id' => $evaluation->id]);
 
         $evaluator = $evaluation->evaluadores()->firstOrFail();
@@ -84,13 +84,18 @@ class DescriptorReviewWorkflowTest extends TestCase
         $this->actingAs($unassigned)->post(route('evaluations.descriptors.review.grade', [$evaluation, $descriptor]), [
             'calificacion' => 1,
         ])->assertForbidden();
-        $this->assertNull($descriptor->fresh()->calificacion);
+        $this->assertSame(0, $descriptor->fresh()->calificacion->value);
+        $this->assertTrue($descriptor->fresh()->calificacion_automatica);
+        $this->assertSame('ARCHIVO_NO_CARGADO', $descriptor->fresh()->motivo_calificacion);
+        $this->actingAs($evaluator)->get(route('evaluations.show', ['evaluacion' => $evaluation, 'seccion' => 'revision']))
+            ->assertOk()
+            ->assertSee('Archivo no cargado');
     }
 
     public function test_observation_remediation_response_close_and_rating_flow(): void
     {
         Storage::fake('local');
-        [$evaluation, , $responsible, $evaluator, , $descriptor] = $this->reviewReadyEvaluation();
+        [$evaluation, , $responsible, $evaluator, , $descriptor] = $this->reviewReadyEvaluation(withEvidence: true);
 
         $this->actingAs($evaluator)->post(route('evaluations.descriptors.observations.store', [$evaluation, $descriptor]), [
             'asunto' => 'Documento faltante',
@@ -103,7 +108,7 @@ class DescriptorReviewWorkflowTest extends TestCase
         $this->assertSame(EstadoEvaluacionDescriptor::Observado, $descriptor->fresh()->estado);
 
         $this->actingAs($responsible)->post(route('evaluations.descriptors.files.store', [$evaluation, $descriptor]), [
-            'archivos' => [$this->pdf('protocolo.pdf')],
+            'archivos' => [UploadedFile::fake()->createWithContent('protocolo.pdf', "%PDF-1.4\nprotocolo institucional subsanado")],
         ])->assertSessionHas('status');
         $this->post(route('evaluations.descriptors.observations.respond', [$evaluation, $descriptor, $observation]), [
             'respuesta' => 'Se adjuntó el protocolo solicitado.',
@@ -120,7 +125,7 @@ class DescriptorReviewWorkflowTest extends TestCase
 
     public function test_responsible_cannot_respond_to_observation_from_another_domain(): void
     {
-        [$evaluation, , $responsible, $evaluator, $otherResponsible, , $otherDescriptor] = $this->reviewReadyEvaluation();
+        [$evaluation, , $responsible, $evaluator, $otherResponsible, , $otherDescriptor] = $this->reviewReadyEvaluation(withOtherEvidence: true);
         $this->actingAs($evaluator)->post(route('evaluations.descriptors.observations.store', [$evaluation, $otherDescriptor]), [
             'asunto' => 'Revisión requerida', 'detalle' => 'Complete la evidencia.',
         ]);
@@ -135,12 +140,16 @@ class DescriptorReviewWorkflowTest extends TestCase
     }
 
     /** @return array{Evaluacion, User, User, User, User, EvaluacionDescriptor, EvaluacionDescriptor} */
-    private function reviewReadyEvaluation(bool $withEvidence = false): array
+    private function reviewReadyEvaluation(bool $withEvidence = false, bool $withOtherEvidence = false): array
     {
         [$evaluation, $administrator, $responsible, $evaluator, $otherResponsible, $descriptor, $otherDescriptor] = $this->evaluationInLoading();
         if ($withEvidence) {
             Storage::fake('local');
             $this->actingAs($responsible)->post(route('evaluations.descriptors.files.store', [$evaluation, $descriptor]), ['archivos' => [$this->pdf('evidencia.pdf')]])->assertSessionHas('status');
+        }
+        if ($withOtherEvidence) {
+            Storage::fake('local');
+            $this->actingAs($otherResponsible)->post(route('evaluations.descriptors.files.store', [$evaluation, $otherDescriptor]), ['archivos' => [$this->pdf('evidencia-otro-dominio.pdf')]])->assertSessionHas('status');
         }
         $this->submitAllSelfAssessments($evaluation);
         $this->advanceCalendarToReview($evaluation);

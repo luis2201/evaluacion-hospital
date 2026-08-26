@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\EstadoAutoevaluacion;
 use App\Enums\EstadoEvaluacion;
 use App\Enums\EstadoEvaluacionDescriptor;
 use App\Enums\EstadoEvaluacionDominio;
@@ -53,6 +54,27 @@ class EvaluationCalendarService
             ?? $evaluation->fecha_limite_carga?->copy()->addDay();
     }
 
+    /** @return array{label: string, variant: string} */
+    public function displayState(Evaluacion $evaluation): array
+    {
+        if ($evaluation->estado === EstadoEvaluacion::Cerrada) {
+            return ['label' => 'Cerrada', 'variant' => 'success'];
+        }
+        if ($evaluation->estado === EstadoEvaluacion::Cancelada) {
+            return ['label' => 'Cancelada', 'variant' => 'warning'];
+        }
+
+        $today = today();
+
+        return match (true) {
+            $evaluation->fecha_inicio !== null && $today->lt($evaluation->fecha_inicio) => ['label' => 'Programada', 'variant' => 'neutral'],
+            $evaluation->fecha_inicio !== null && $evaluation->fecha_limite_carga !== null && $today->betweenIncluded($evaluation->fecha_inicio, $evaluation->fecha_limite_carga) => ['label' => 'Carga de evidencias', 'variant' => 'info'],
+            $evaluation->fecha_cierre_prevista !== null && $today->gt($evaluation->fecha_cierre_prevista) => ['label' => 'Cierre previsto vencido', 'variant' => 'warning'],
+            $this->reviewDate($evaluation) !== null && $today->gte($this->reviewDate($evaluation)) => ['label' => 'En evaluación', 'variant' => 'info'],
+            default => ['label' => 'Carga finalizada', 'variant' => 'warning'],
+        };
+    }
+
     private function syncById(int $evaluationId): bool
     {
         return DB::transaction(function () use ($evaluationId): bool {
@@ -83,7 +105,58 @@ class EvaluationCalendarService
             }
             if ($newState === EstadoEvaluacion::EnEvaluacion) {
                 $evaluation->dominios()->where('estado', EstadoEvaluacionDominio::Pendiente->value)->update(['estado' => EstadoEvaluacionDominio::EnCarga]);
+                $missingSelfAssessments = 0;
+                foreach ($evaluation->dominios()->with('autoevaluacion')->get() as $domain) {
+                    if ($domain->autoevaluacion?->estado === EstadoAutoevaluacion::Enviada) {
+                        continue;
+                    }
+                    $domain->autoevaluacion()->updateOrCreate([], [
+                        'contenido' => $domain->autoevaluacion?->contenido ?: 'Autoevaluación no enviada dentro del plazo de carga establecido.',
+                        'cantidad_palabras' => $domain->autoevaluacion?->cantidad_palabras ?: 9,
+                        'estado' => EstadoAutoevaluacion::Incumplida,
+                        'registrada_por' => $domain->responsable_id,
+                        'enviada_at' => null,
+                    ]);
+                    $domain->update(['estado' => EstadoEvaluacionDominio::Incumplido]);
+                    $missingSelfAssessments++;
+                }
+                $missingEvidence = $evaluation->descriptores()
+                    ->whereNull('calificacion')
+                    ->whereDoesntHave('archivos')
+                    ->update([
+                        'estado' => EstadoEvaluacionDescriptor::Evaluado->value,
+                        'calificacion' => 0,
+                        'calificacion_automatica' => true,
+                        'motivo_calificacion' => 'ARCHIVO_NO_CARGADO',
+                        'observacion_evaluador' => 'Calificación automática por cierre de la fase de carga sin archivo de evidencia.',
+                        'evaluado_por' => null,
+                        'evaluado_at' => now(),
+                    ]);
                 $evaluation->descriptores()->where('estado', EstadoEvaluacionDescriptor::Pendiente->value)->update(['estado' => EstadoEvaluacionDescriptor::EnEvaluacion]);
+                if ($missingEvidence > 0) {
+                    Auditoria::query()->create([
+                        'user_id' => null,
+                        'accion' => 'DESCRIPTORES_SIN_ARCHIVO_CALIFICADOS',
+                        'tabla' => 'evaluacion_descriptores',
+                        'registro_id' => $evaluation->id,
+                        'valores_anteriores' => null,
+                        'valores_nuevos' => ['cantidad' => $missingEvidence, 'calificacion' => 0, 'motivo' => 'ARCHIVO_NO_CARGADO'],
+                        'ip_address' => null,
+                        'user_agent' => 'Laravel Scheduler',
+                    ]);
+                }
+                if ($missingSelfAssessments > 0) {
+                    Auditoria::query()->create([
+                        'user_id' => null,
+                        'accion' => 'AUTOEVALUACIONES_NO_ENVIADAS',
+                        'tabla' => 'autoevaluaciones_dominios',
+                        'registro_id' => $evaluation->id,
+                        'valores_anteriores' => null,
+                        'valores_nuevos' => ['cantidad' => $missingSelfAssessments, 'estado' => EstadoAutoevaluacion::Incumplida->value],
+                        'ip_address' => null,
+                        'user_agent' => 'Laravel Scheduler',
+                    ]);
+                }
             }
 
             Auditoria::query()->create([

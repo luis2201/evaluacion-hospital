@@ -44,6 +44,8 @@ class ReviewDescriptor
             $locked->update([
                 'estado' => EstadoEvaluacionDescriptor::Evaluado,
                 'calificacion' => $rating,
+                'calificacion_automatica' => false,
+                'motivo_calificacion' => null,
                 'observacion_evaluador' => $comment,
                 'evaluado_por' => $evaluator->id,
                 'evaluado_at' => now(),

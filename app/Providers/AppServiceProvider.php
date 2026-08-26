@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\AuditService;
+use App\Services\SystemSettingsService;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Event;
@@ -24,7 +25,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Password::defaults(fn () => Password::min(12)->mixedCase()->letters()->numbers()->symbols());
+        $settings = app(SystemSettingsService::class);
+        config(['app.name' => $settings->get('institution_name'), 'session.lifetime' => $settings->integer('session_lifetime_minutes')]);
+        Password::defaults(fn () => Password::min($settings->integer('minimum_password_length'))->mixedCase()->letters()->numbers()->symbols());
 
         Event::listen(Failed::class, function (Failed $event): void {
             app(AuditService::class)->record('INICIO_SESION_FALLIDO', 'users', $event->user?->id, userId: $event->user?->id);

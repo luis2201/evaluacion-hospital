@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\CodigoRol;
 use App\Enums\EstadoModeloEvaluacion;
 use App\Models\ModeloEvaluacion;
 use App\Models\User;
@@ -10,12 +11,16 @@ class ModeloEvaluacionPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->isAdministrator()
+            || $user->hasRole(CodigoRol::ResponsableDominio)
+            || $user->hasRole(CodigoRol::AuditorLectura);
     }
 
     public function view(User $user, ModeloEvaluacion $modelo): bool
     {
-        return $modelo->estado !== EstadoModeloEvaluacion::Borrador || $user->isAdministrator();
+        return $user->isAdministrator()
+            || (($user->hasRole(CodigoRol::ResponsableDominio) || $user->hasRole(CodigoRol::AuditorLectura))
+                && $modelo->estado !== EstadoModeloEvaluacion::Borrador);
     }
 
     public function create(User $user): bool

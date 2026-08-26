@@ -25,9 +25,9 @@ class CloseEvaluation
             }
 
             $totalDomains = $locked->dominios()->count();
-            $submitted = $locked->dominios()->whereHas('autoevaluacion', fn ($query) => $query->where('estado', EstadoAutoevaluacion::Enviada->value))->count();
-            if ($totalDomains === 0 || $submitted !== $totalDomains) {
-                $this->fail("Faltan autoevaluaciones enviadas ({$submitted} de {$totalDomains}).");
+            $finalized = $locked->dominios()->whereHas('autoevaluacion', fn ($query) => $query->whereIn('estado', [EstadoAutoevaluacion::Enviada->value, EstadoAutoevaluacion::Incumplida->value]))->count();
+            if ($totalDomains === 0 || $finalized !== $totalDomains) {
+                $this->fail("Faltan autoevaluaciones por clasificar ({$finalized} de {$totalDomains}).");
             }
 
             $totalDescriptors = $locked->descriptores()->count();

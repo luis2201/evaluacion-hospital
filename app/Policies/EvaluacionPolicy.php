@@ -84,6 +84,12 @@ class EvaluacionPolicy
         return $user->isAdministrator() && $evaluacion->estado === EstadoEvaluacion::EnEvaluacion;
     }
 
+    public function manageSchedule(User $user, Evaluacion $evaluacion): bool
+    {
+        return $user->isAdministrator()
+            && ! in_array($evaluacion->estado, [EstadoEvaluacion::Cerrada, EstadoEvaluacion::Cancelada], true);
+    }
+
     public function respondObservation(User $user, Evaluacion $evaluacion, EvaluacionDescriptor $evaluationDescriptor): bool
     {
         if ($evaluationDescriptor->evaluacion_id !== $evaluacion->id) {

@@ -19,6 +19,7 @@ use App\Http\Controllers\Instrument\DomainController;
 use App\Http\Controllers\Instrument\InstrumentController;
 use App\Http\Controllers\Instrument\InstrumentStateController;
 use App\Http\Controllers\Instrument\ResultCategoryController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Setup\InitialAdministratorController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +42,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('cerrar-sesion', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::get('perfil/contrasena', [PasswordController::class, 'edit'])->name('profile.password.edit');
     Route::put('perfil/contrasena', [PasswordController::class, 'update'])->name('profile.password.update');
+    Route::get('configuracion', [SettingsController::class, 'show'])->name('settings.show');
     Route::get('instrumentos', [InstrumentController::class, 'index'])->name('instruments.index');
     Route::get('instrumentos/{instrumento}', [InstrumentController::class, 'show'])->name('instruments.show');
     Route::get('evaluaciones', [EvaluationController::class, 'index'])->name('evaluations.index');
@@ -59,12 +61,14 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('evaluaciones/{evaluacion}/descriptores/{evaluacionDescriptor}/observaciones/{observacion}/cerrar', [DescriptorReviewController::class, 'close'])->name('evaluations.descriptors.observations.close');
 
     Route::prefix('administracion')->name('admin.')->middleware('role:ADMINISTRADOR')->group(function (): void {
+        Route::put('configuracion', [SettingsController::class, 'update'])->name('settings.update');
         Route::resource('usuarios', UserController::class)->parameters(['usuarios' => 'user'])->except(['show', 'destroy'])->names('users');
         Route::delete('usuarios/{user}/sesiones', [UserSessionController::class, 'destroy'])->name('users.sessions.destroy');
         Route::get('evaluaciones/nueva', [EvaluationController::class, 'create'])->name('evaluations.create');
         Route::post('evaluaciones', [EvaluationController::class, 'store'])->name('evaluations.store');
         Route::get('evaluaciones/{evaluacion}/editar', [EvaluationController::class, 'edit'])->name('evaluations.edit');
         Route::put('evaluaciones/{evaluacion}', [EvaluationController::class, 'update'])->name('evaluations.update');
+        Route::put('evaluaciones/{evaluacion}/cronograma', [EvaluationController::class, 'updateSchedule'])->name('evaluations.schedule.update');
         Route::post('evaluaciones/{evaluacion}/habilitar-carga', [EvaluationWorkflowController::class, 'start'])->name('evaluations.start');
         Route::post('evaluaciones/{evaluacion}/iniciar-revision', [EvaluationWorkflowController::class, 'startReview'])->name('evaluations.review.start');
         Route::post('evaluaciones/{evaluacion}/cancelar', [EvaluationWorkflowController::class, 'cancel'])->name('evaluations.cancel');
