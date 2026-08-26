@@ -6,7 +6,7 @@ After=network.target mysql.service
 User=www-data
 Group=www-data
 WorkingDirectory=/var/www/evaluacion-hospital
-ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --timeout=120
+ExecStart=/opt/remi/php83/root/usr/bin/php artisan queue:work --sleep=3 --tries=3 --timeout=120
 Restart=always
 RestartSec=5
 

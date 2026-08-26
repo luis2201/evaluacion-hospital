@@ -1,5 +1,5 @@
-; Copiar a /etc/php/8.3/apache2/conf.d/99-evaluacion-hospital.ini
-; y a /etc/php/8.3/cli/conf.d/99-evaluacion-hospital.ini.
+; Con Remi PHP 8.3, copiar a:
+; /etc/opt/remi/php83/php.d/99-evaluacion-hospital.ini
 expose_php = Off
 memory_limit = 512M
 max_execution_time = 120

@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 APP_DIR="${APP_DIR:-/var/www/evaluacion-hospital}"
-PHP_BIN="${PHP_BIN:-/usr/bin/php}"
+PHP_BIN="${PHP_BIN:-/opt/remi/php83/root/usr/bin/php}"
 COMPOSER_BIN="${COMPOSER_BIN:-/usr/local/bin/composer}"
 NPM_BIN="${NPM_BIN:-/usr/bin/npm}"
 
@@ -14,7 +14,7 @@ git fetch --prune origin
 git checkout main
 git pull --ff-only origin main
 
-"$COMPOSER_BIN" install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+"$PHP_BIN" "$COMPOSER_BIN" install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 "$NPM_BIN" ci --ignore-scripts
 "$NPM_BIN" run build
 

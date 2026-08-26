@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 APP_DIR="${APP_DIR:-/var/www/evaluacion-hospital}"
+PHP_BIN="${PHP_BIN:-/opt/remi/php83/root/usr/bin/php}"
 BACKUP_PATH="${1:-}"
 CONFIRMATION="${2:-}"
 
@@ -16,19 +17,19 @@ cd "$APP_DIR"
 read_env() { sed -n "s/^$1=//p" .env | tail -n1 | sed 's/^"//;s/"$//'; }
 export MYSQL_PWD="$(read_env DB_PASSWORD)"
 
-php artisan down --retry=60
-trap 'php artisan up' EXIT
+"$PHP_BIN" artisan down --retry=60
+trap '"$PHP_BIN" artisan up' EXIT
 gzip -dc "$BACKUP_PATH/database.sql.gz" | mysql -h "$(read_env DB_HOST)" -P "$(read_env DB_PORT)" -u "$(read_env DB_USERNAME)" "$(read_env DB_DATABASE)"
 
 RESTORE_TMP="$(mktemp -d)"
-trap 'rm -rf -- "$RESTORE_TMP"; php artisan up' EXIT
+trap 'rm -rf -- "$RESTORE_TMP"; "$PHP_BIN" artisan up' EXIT
 tar -C "$RESTORE_TMP" -xzf "$BACKUP_PATH/private-documents.tar.gz"
 test -d "$RESTORE_TMP/private" || { echo "Archivo documental inválido." >&2; exit 1; }
 mv "$APP_DIR/storage/app/private" "$APP_DIR/storage/app/private.before-restore-$RANDOM"
 mv "$RESTORE_TMP/private" "$APP_DIR/storage/app/private"
-php artisan optimize:clear
-php artisan production:check
-php artisan up
+"$PHP_BIN" artisan optimize:clear
+"$PHP_BIN" artisan production:check
+"$PHP_BIN" artisan up
 unset MYSQL_PWD
 rm -rf -- "$RESTORE_TMP"
 trap - EXIT

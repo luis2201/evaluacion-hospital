@@ -17,10 +17,12 @@ cd /var/www
 git clone https://github.com/luis2201/evaluacion-hospital.git
 cd evaluacion-hospital
 cp .env.production.example .env
-composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+PHP83=/opt/remi/php83/root/usr/bin/php
+COMPOSER_BIN=/usr/local/bin/composer
+"$PHP83" "$COMPOSER_BIN" install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 npm ci --ignore-scripts
 npm run build
-php artisan key:generate
+"$PHP83" artisan key:generate
 ```
 
 Editar `.env` con dominio, base de datos, correo y secretos reales. Nunca se debe versionar este archivo.
@@ -28,11 +30,11 @@ Editar `.env` con dominio, base de datos, correo y secretos reales. Nunca se deb
 ```bash
 sudo chown -R "$USER":www-data /var/www/evaluacion-hospital
 sudo chmod -R ug+rwX storage bootstrap/cache
-php artisan migrate --force
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan production:check
+"$PHP83" artisan migrate --force
+"$PHP83" artisan config:cache
+"$PHP83" artisan route:cache
+"$PHP83" artisan view:cache
+"$PHP83" artisan production:check
 ```
 
 ## Apache y HTTPS
@@ -68,7 +70,7 @@ sudo systemctl enable --now evaluacion-hospital-backup.timer
 El script solo acepta un checkout limpio y realiza `git pull --ff-only` desde `main`:
 
 ```bash
-sudo -u www-data APP_DIR=/var/www/evaluacion-hospital bash scripts/deploy-production.sh
+sudo -u www-data APP_DIR=/var/www/evaluacion-hospital PHP_BIN=/opt/remi/php83/root/usr/bin/php bash scripts/deploy-production.sh
 APP_URL=https://evaluacion.example.edu.ec bash scripts/health-check.sh
 ```
 
@@ -95,7 +97,7 @@ La restauración verifica SHA-256, conserva temporalmente la carpeta documental 
 
 ## Verificación final
 
-1. `php artisan production:check` finaliza con código `0`.
+1. `/opt/remi/php83/root/usr/bin/php artisan production:check` finaliza con código `0`.
 2. `/up` responde correctamente por HTTPS.
 3. Inicio de sesión, carga privada y descarga PDF funcionan.
 4. Scheduler y cola aparecen activos en `systemctl`.

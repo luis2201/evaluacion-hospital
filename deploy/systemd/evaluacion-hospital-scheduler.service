@@ -7,7 +7,7 @@ Type=simple
 User=www-data
 Group=www-data
 WorkingDirectory=/var/www/evaluacion-hospital
-ExecStart=/usr/bin/php artisan schedule:work
+ExecStart=/opt/remi/php83/root/usr/bin/php artisan schedule:work
 Restart=always
 RestartSec=5
 
