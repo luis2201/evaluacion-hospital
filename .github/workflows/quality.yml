@@ -31,16 +31,16 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: composer install --no-interaction --prefer-dist
-      - run: npm ci --ignore-scripts
-      - run: mysql -h127.0.0.1 -uroot -proot -e "SET GLOBAL log_bin_trust_function_creators=1"
       - name: Preparar entorno
         run: |
           cp .env.example .env
-          php artisan key:generate
           sed -i 's/DB_DATABASE=.*/DB_DATABASE=evaluacion_test/' .env
           sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
           sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+      - run: composer install --no-interaction --prefer-dist
+      - run: npm ci --ignore-scripts
+      - run: php artisan key:generate
+      - run: mysql -h127.0.0.1 -uroot -proot -e "SET GLOBAL log_bin_trust_function_creators=1"
       - run: php vendor/bin/pint --test
       - run: php artisan test
       - run: npm run build
