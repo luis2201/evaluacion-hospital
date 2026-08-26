@@ -44,5 +44,5 @@ jobs:
       - run: php artisan key:generate
       - run: mysql -h127.0.0.1 -uroot -proot -e "SET GLOBAL log_bin_trust_function_creators=1"
       - run: php vendor/bin/pint --test
-      - run: php artisan test
       - run: npm run build
+      - run: php artisan test
