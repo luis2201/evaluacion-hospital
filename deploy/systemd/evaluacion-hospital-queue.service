@@ -1,0 +1,14 @@
+[Unit]
+Description=Laravel queue - Evaluación Hospital
+After=network.target mysql.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/evaluacion-hospital
+ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --timeout=120
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,46 @@
+name: Calidad
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: evaluacion_test
+          MYSQL_ROOT_PASSWORD: root
+        ports: [3306:3306]
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, pdo_mysql, gd
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist
+      - run: npm ci --ignore-scripts
+      - run: mysql -h127.0.0.1 -uroot -proot -e "SET GLOBAL log_bin_trust_function_creators=1"
+      - name: Preparar entorno
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=evaluacion_test/' .env
+          sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+      - run: php vendor/bin/pint --test
+      - run: php artisan test
+      - run: npm run build
