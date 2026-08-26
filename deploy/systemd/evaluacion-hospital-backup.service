@@ -1,0 +1,11 @@
+[Unit]
+Description=Respaldo de Evaluación Hospital
+After=mysql.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/var/www/evaluacion-hospital
+Environment=APP_DIR=/var/www/evaluacion-hospital
+Environment=BACKUP_DIR=/var/backups/evaluacion-hospital
+ExecStart=/usr/bin/bash /var/www/evaluacion-hospital/scripts/backup-production.sh

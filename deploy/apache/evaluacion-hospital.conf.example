@@ -1,0 +1,33 @@
+<VirtualHost *:80>
+    ServerName evaluacion.example.edu.ec
+    Redirect permanent / https://evaluacion.example.edu.ec/
+</VirtualHost>
+
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+    ServerName evaluacion.example.edu.ec
+    DocumentRoot /var/www/evaluacion-hospital/public
+
+    <Directory /var/www/evaluacion-hospital/public>
+        AllowOverride All
+        Options -Indexes +FollowSymLinks
+        Require all granted
+        LimitRequestBody 1073741824
+    </Directory>
+
+    <Directory /var/www/evaluacion-hospital>
+        Require all denied
+    </Directory>
+
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/evaluacion.example.edu.ec/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/evaluacion.example.edu.ec/privkey.pem
+
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    ErrorLog ${APACHE_LOG_DIR}/evaluacion-hospital-error.log
+    CustomLog ${APACHE_LOG_DIR}/evaluacion-hospital-access.log combined
+</VirtualHost>
+</IfModule>
