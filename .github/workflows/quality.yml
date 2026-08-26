@@ -37,6 +37,8 @@ jobs:
           sed -i 's/DB_DATABASE=.*/DB_DATABASE=evaluacion_test/' .env
           sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
           sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+          sed -i 's/name="DB_DATABASE" value="[^"]*"/name="DB_DATABASE" value="evaluacion_test"/' phpunit.xml
+          sed -i 's/name="DB_PASSWORD" value="[^"]*"/name="DB_PASSWORD" value="root"/' phpunit.xml
       - run: composer install --no-interaction --prefer-dist
       - run: npm ci --ignore-scripts
       - run: php artisan key:generate
