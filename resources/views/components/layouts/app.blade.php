@@ -61,6 +61,7 @@
                 <a href="{{ route('settings.show') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'nav-link-active' : '' }}">
                     <x-ui.icon name="settings" class="size-5" /> Configuración
                 </a>
+                @if($roleNavigation['audit'])<a href="{{ route('audit.index') }}" class="nav-link {{ request()->routeIs('audit.*') ? 'nav-link-active' : '' }}"><x-ui.icon name="shield" class="size-5" /> Auditoría</a>@endif
             </nav>
 
             <div class="border-t border-slate-100 p-4">
@@ -83,7 +84,7 @@
                     </div>
                 </div>
 
-                <details class="relative">
+                <div class="flex items-center gap-2"><a href="{{ route('notifications.index') }}" class="relative grid size-11 place-items-center rounded-xl text-slate-600 hover:bg-slate-50" aria-label="Notificaciones"><x-ui.icon name="info" class="size-5" />@if(auth()->user()->unreadNotifications()->exists())<span class="absolute right-1.5 top-1.5 size-2.5 rounded-full bg-red-500"></span>@endif</a><details class="relative">
                     <summary class="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-xl px-2 py-1.5 text-left hover:bg-slate-50" aria-label="Menú de usuario">
                     <span class="grid size-9 place-items-center rounded-full bg-navy-900 text-xs font-bold text-white">{{ str(auth()->user()->name)->explode(' ')->take(2)->map(fn($part) => str($part)->substr(0, 1))->join('') }}</span>
                     <span class="hidden sm:block">
@@ -98,7 +99,7 @@
                             <button type="submit" class="nav-link w-full">Cerrar sesión</button>
                         </form>
                     </div>
-                </details>
+                </details></div>
             </header>
 
             <main id="contenido-principal" class="mx-auto w-full max-w-[100rem] p-4 md:p-6 lg:p-8">

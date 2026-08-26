@@ -13,7 +13,7 @@ Sistema web monolítico institucional para gestionar la evaluación de calidad d
 
 ## Estado actual
 
-La aplicación contiene el dominio MySQL, autenticación, seguridad, administración versionada del instrumento MEC-SIM, creación/configuración de procesos, autoevaluación por dominio, gestión documental privada, revisión con subsanaciones, resultados ponderados con cierre formal y configuración diferenciada por roles. Las etapas 1 a 8.5 están implementadas y documentadas.
+La aplicación contiene el dominio MySQL, autenticación, seguridad, administración versionada del instrumento MEC-SIM, creación/configuración de procesos, autoevaluación por dominio, gestión documental privada, revisión con subsanaciones, resultados ponderados, configuración diferenciada por roles, reportes PDF, auditoría y notificaciones internas. Las etapas 1 a 9 están implementadas y documentadas.
 
 El esquema SQL revisado se conserva en `database/schema/evaluacion_hsimulacion_mysql_v2.sql`. Su implementación y forma de validación están documentadas en `docs/ETAPA_1_BASE_DE_DATOS.md`.
 

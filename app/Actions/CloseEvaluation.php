@@ -8,6 +8,7 @@ use App\Enums\EstadoEvaluacionDominio;
 use App\Enums\EstadoObservacion;
 use App\Models\Evaluacion;
 use App\Models\User;
+use App\Notifications\EvaluationEventNotification;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -60,6 +61,14 @@ class CloseEvaluation
             ]);
 
             $this->audit->recordModel('EVALUACION_CERRADA', $locked, $before);
+            $recipients = User::query()->whereIn('id', $locked->evaluadores()->pluck('users.id')->merge($locked->dominios()->pluck('responsable_id'))->unique())->get();
+            foreach ($recipients as $recipient) {
+                $recipient->notify(new EvaluationEventNotification([
+                    'title' => 'Evaluación cerrada',
+                    'message' => "La evaluación {$locked->codigo} fue cerrada formalmente. Ya puedes consultar su resultado oficial.",
+                    'url' => route('evaluations.results', $locked),
+                ]));
+            }
         });
     }
 
