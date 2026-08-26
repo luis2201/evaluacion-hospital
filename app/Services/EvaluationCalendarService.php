@@ -8,6 +8,8 @@ use App\Enums\EstadoEvaluacionDescriptor;
 use App\Enums\EstadoEvaluacionDominio;
 use App\Models\Auditoria;
 use App\Models\Evaluacion;
+use App\Models\User;
+use App\Notifications\EvaluationEventNotification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -169,6 +171,17 @@ class EvaluationCalendarService
                 'ip_address' => null,
                 'user_agent' => 'Laravel Scheduler',
             ]);
+
+            $recipientIds = $evaluation->evaluadores()->pluck('users.id')->merge($evaluation->dominios()->pluck('responsable_id'))->unique();
+            foreach (User::query()->whereIn('id', $recipientIds)->get() as $recipient) {
+                $recipient->notify(new EvaluationEventNotification([
+                    'title' => $newState === EstadoEvaluacion::CargaEvidencias ? 'Carga de evidencias habilitada' : 'Revisión de evidencias iniciada',
+                    'message' => $newState === EstadoEvaluacion::CargaEvidencias
+                        ? "La evaluación {$evaluation->codigo} ya permite registrar autoevaluaciones y evidencias."
+                        : "La evaluación {$evaluation->codigo} inició su fase de revisión según el cronograma.",
+                    'url' => route('evaluations.show', $evaluation),
+                ]));
+            }
 
             return true;
         });

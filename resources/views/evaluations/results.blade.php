@@ -9,12 +9,12 @@
             <h1 class="mt-3 text-2xl font-bold text-navy-900">Resultados de la evaluación</h1>
             <p class="mt-2 text-sm text-slate-500">Resumen ponderado del instrumento {{ $evaluacion->modeloEvaluacion->nombre }}.</p>
         </div>
-        @can('close', $evaluacion)
+        <div class="flex flex-wrap gap-2"><a href="{{ route('evaluations.results.pdf', $evaluacion) }}" class="app-button-secondary">Descargar resultados PDF</a>@can('close', $evaluacion)
             <form method="POST" action="{{ route('admin.evaluations.close', $evaluacion) }}" onsubmit="return confirm('¿Confirmar el cierre formal? Las calificaciones y evidencias quedarán protegidas.')">
                 @csrf
                 <button class="app-button-primary">Cerrar evaluación</button>
             </form>
-        @endcan
+        @endcan</div>
     </div>
 
     @if($errors->any())

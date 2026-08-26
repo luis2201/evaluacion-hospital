@@ -16,6 +16,7 @@ class RoleExperienceService
             'evaluations' => true,
             'users' => $user->isAdministrator(),
             'settings' => true,
+            'audit' => $user->isAdministrator() || $user->hasRole(CodigoRol::AuditorLectura),
         ];
     }
 
